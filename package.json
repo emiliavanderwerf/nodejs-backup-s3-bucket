@@ -1,0 +1,19 @@
+{
+  "name": "nodejs-backup-s3-bucket",
+  "version": "1.0.0",
+  "description": "A Node.js script to create a copy of a public Google Cloud S3 bucket and store it in a local tarball.",
+  "main": "backup.js",
+  "scripts": {
+    "test": "echo \"Error: No test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emiliavanderwerf/nodejs-backup-s3-bucket.git"
+  },
+  "author": "Emilia Vanderwerf",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/storage": "^2.3.4",
+    "yargs": "^12.0.5"
+  }
+}
