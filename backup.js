@@ -21,6 +21,7 @@ const bucketName = 'nimactive';
  * @param {string} Google Cloud bucket name
  */
 async function backupS3Bucket(bucketName) {
+    // List files in bucket
     const bucket = storage.bucket(bucketName);
     const files = await getFilesInBucket(bucket);
 
@@ -29,28 +30,19 @@ async function backupS3Bucket(bucketName) {
     }
     
     const backupDirPath = createBackupDir(bucketName);
-    console.log('BackupDirPath', backupDirPath);
 
+    // Download each file into backup directory
     for (const file of files) {
 	// Skip directory names
 	if (!file.name.endsWith('/')) {
-	    const destFilePath = `${backupDirPath}${path.sep}${file.name}`;
+	    const destDir = `${backupDirPath}${path.sep}`
+	    // TODO: Create destination directory
+	    
+	    const destFilePath = `${destDir}${file.name}`;
 	    const fileContents = await downloadFileFromBucket(bucket, file.name, destFilePath);
-	    console.log('File Contents', fileContents);
+	    console.log(`Downloaded ${file.name} to ${destFilePath}`);
 	}
     }
-
-    // TODO: May potentially run the above in parallel
-    /*
-    files.forEach(function(file) {
-	// Skip directory names
-	if (!file.name.endsWith('/')) {
-	    const destFilePath = `${backupDirPath}${path.sep}${file.name}`;
-	    console.log('DestFilePath', destFilePath);
-            const fileContents = await downloadFileFromBucket(bucket, file.name, destFilePath);
-	}
-    });
-    */
 }
 
 /*
@@ -76,17 +68,21 @@ async function getFilesInBucket(bucket) {
  * Download an individual file's contents.
  *
  * @param {Bucket} Google cloud bucket
- * @param {string}
- * @param {string}
- * @returns {}
+ * @param {string} Name of file in bucket
+ * @param {string} Full path to the backup file
+ * @returns {Buffer} Contents of the downloaded file
  */
-async function downloadFileFromBucket(bucket, srcFileName, destFileName) {
+async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
+    const options = {
+	destination: destFilePath
+    }
+    
     return bucket
 	.file(srcFileName)
-	.download(destFileName)
-	.then(downloadedResponse => downloadedResponse)
+	.download(options)
+	.then(fileContents => fileContents)
 	.catch(error => {
-	    console.error(`ERROR: Failed to download ${srcFileName} to ${destFileName}`);
+	    console.error(`ERROR: Failed to download ${srcFileName} to ${destFilePath}`);
 	    console.error(error);
 	    process.exit(1);
 	});
