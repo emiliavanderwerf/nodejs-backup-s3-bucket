@@ -14,10 +14,21 @@ const bucketName = 'nimactive';
 const bucket = storage.bucket(bucketName);
 
 async function backupS3Bucket(bucket) {
-    bucket
-	.getFiles()
-	.then(result => console.log('Results:', result[0]))
-	.catch(error => console.log('ERROR:', error));
+    const files = await getFilesInBucket(bucket);
+    console.log('One file name', files[0].name);
 }
 
+async function getFilesInBucket(bucket) {
+    return bucket
+	.getFiles()
+        .then(result => result[0])
+	.catch(error => {
+	    console.log('ERROR: Failed to list files in bucket');
+	    console.log(error);
+	    process.exit(1);
+	});
+}
+
+
 backupS3Bucket(bucket);
+
