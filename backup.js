@@ -29,9 +29,8 @@ async function backupS3Bucket(bucketName) {
 	// TODO: Should exit?
     }
 
-    // TODO: This call is now redundant
-    const backupDirPath = createBackupDir(bucketName);
-
+    const backupDirPath = `${path.sep}tmp${path.sep}${getBackupName()}${path.sep}${bucketName}`;
+    
     // Download each file into backup directory
     for (const file of files) {
 	// Skip directory names
@@ -89,22 +88,6 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
 	    console.error(error);
 	    process.exit(1);
 	});
-}
-
-/*
- * Create the directory which will contain the backup files
- *
- * @param {string} Name of the bucket to back up
- * @returns {string} Local path to backup directory
- */
-function createBackupDir(bucketName) {
-    const backupDirName = getBackupName();
-    const fullPath = `/tmp/${backupDirName}/${bucketName}`;
-
-    // Synchronously create backup directory
-    createDirectory(fullPath);
-    
-    return fullPath;
 }
 
 /*
