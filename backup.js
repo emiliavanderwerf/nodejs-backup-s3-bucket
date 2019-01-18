@@ -5,6 +5,7 @@
 
 // Imports
 const fs = require('fs');
+const path = require('path');
 const {Storage} = require('@google-cloud/storage');
 
 // Creates a client
@@ -14,16 +15,42 @@ const bucketName = 'nimactive';
 
 
 /*
- * Top-level function which creates a tarball backup of a S3 bucket.
+ * Top-level function which creates a tarball backup of a Google Cloud
+ * S3 bucket.
  *
- * @param {Bucket} Google Cloud bucket
+ * @param {string} Google Cloud bucket name
  */
 async function backupS3Bucket(bucketName) {
     const bucket = storage.bucket(bucketName);
     const files = await getFilesInBucket(bucket);
-    
-    prepareBackupDir(bucketName);
 
+    if (files.length == 0) {
+	// TODO: Should exit?
+    }
+    
+    const backupDirPath = createBackupDir(bucketName);
+    console.log('BackupDirPath', backupDirPath);
+
+    for (const file of files) {
+	// Skip directory names
+	if (!file.name.endsWith('/')) {
+	    const destFilePath = `${backupDirPath}${path.sep}${file.name}`;
+	    const fileContents = await downloadFileFromBucket(bucket, file.name, destFilePath);
+	    console.log('File Contents', fileContents);
+	}
+    }
+
+    // TODO: May potentially run the above in parallel
+    /*
+    files.forEach(function(file) {
+	// Skip directory names
+	if (!file.name.endsWith('/')) {
+	    const destFilePath = `${backupDirPath}${path.sep}${file.name}`;
+	    console.log('DestFilePath', destFilePath);
+            const fileContents = await downloadFileFromBucket(bucket, file.name, destFilePath);
+	}
+    });
+    */
 }
 
 /*
@@ -36,7 +63,8 @@ async function getFilesInBucket(bucket) {
     return bucket
 	.getFiles()
         // GetFilesResponse object's parameter 0 is array of File
-        .then(result => result[0])
+        // TODO: Will fileResponse[0] throw exception if empty bucket?
+        .then(fileResponse => fileResponse[0])
 	.catch(error => {
 	    console.error('ERROR: Failed to list files in bucket');
 	    console.error(error);
@@ -44,7 +72,33 @@ async function getFilesInBucket(bucket) {
 	});
 }
 
-function prepareBackupDir(bucketName) {
+/*
+ * Download an individual file's contents.
+ *
+ * @param {Bucket} Google cloud bucket
+ * @param {string}
+ * @param {string}
+ * @returns {}
+ */
+async function downloadFileFromBucket(bucket, srcFileName, destFileName) {
+    return bucket
+	.file(srcFileName)
+	.download(destFileName)
+	.then(downloadedResponse => downloadedResponse)
+	.catch(error => {
+	    console.error(`ERROR: Failed to download ${srcFileName} to ${destFileName}`);
+	    console.error(error);
+	    process.exit(1);
+	});
+}
+
+/*
+ * Create the directory which will contain the backup files
+ *
+ * @param {string} Name of the bucket to back up
+ * @returns {string} Local path to backup directory
+ */
+function createBackupDir(bucketName) {
     const backupDirName = getBackupName();
     const fullPath = `/tmp/${backupDirName}/${bucketName}`;
 
@@ -57,7 +111,7 @@ function prepareBackupDir(bucketName) {
 	}
     });
 
-    
+    return fullPath;
 }
 
 /*
@@ -86,6 +140,7 @@ function getBackupName() {
 function leftPadByTwo(dateElement) {
     return dateElement.toString().padStart(2, '0');
 }
+
 
 backupS3Bucket(bucketName);
 
