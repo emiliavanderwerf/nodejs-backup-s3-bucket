@@ -13,15 +13,27 @@ const bucketName = 'nimactive';
 
 const bucket = storage.bucket(bucketName);
 
+/*
+ * Top-level function which creates a tarball backup of S3 bucket.
+ *
+ * @param {Bucket} Google Cloud bucket
+ */
 async function backupS3Bucket(bucket) {
     const files = await getFilesInBucket(bucket);
     console.log('One file name', files[0].name);
     console.log('Backup file name', getBackupName());
 }
 
+/*
+ * List all accessible files in bucket. Will not list private files.
+ *
+ * @param {Bucket} Google Cloud bucket
+ * @returns {Array of File} List of files in bucket, on success
+ */
 async function getFilesInBucket(bucket) {
     return bucket
 	.getFiles()
+        // GetFilesResponse object's parameter 0 is array of File
         .then(result => result[0])
 	.catch(error => {
 	    console.error('ERROR: Failed to list files in bucket');
@@ -30,7 +42,12 @@ async function getFilesInBucket(bucket) {
 	});
 }
 
-
+/*
+ * Get name of the backup file in format `backup-<date>`, where
+ * <date> is `yyyy-mm-dd-hh-MM`.
+ *
+ * @returns {string} Backup file name
+ */
 function getBackupName() {
     const currentTime = new Date();
     const year = currentTime.getFullYear();
@@ -42,6 +59,12 @@ function getBackupName() {
     return `backup-${year}-${month}-${date}-${hour}-${minute}`
 }
 
+/*
+ * Left pad a date element by zero for a target length of two
+ *
+ * @param {number} The date element (ie. month, hour, etc.)
+ * @returns {string} Padded date element
+ */
 function leftPadByTwo(dateElement) {
     return dateElement.toString().padStart(2, '0');
 }
