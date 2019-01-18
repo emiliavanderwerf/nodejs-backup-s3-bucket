@@ -6,6 +6,7 @@
 // Imports
 const fs = require('fs');
 const path = require('path');
+const tar = require('tar');
 const {Storage} = require('@google-cloud/storage');
 
 // Creates a client
@@ -15,8 +16,8 @@ const bucketName = 'nimactive';
 
 
 /*
- * Top-level function which creates a tarball backup of a Google Cloud
- * S3 bucket.
+ * Top-level function which creates a tarball backup of data accessible
+ * within a Google Cloud S3 bucket.
  *
  * @param {string} Google Cloud bucket name
  */
@@ -29,13 +30,14 @@ async function backupS3Bucket(bucketName) {
 	// TODO: Should exit?
     }
 
-    const backupDirPath = `${path.sep}tmp${path.sep}${getBackupName()}${path.sep}${bucketName}`;
+    const backupDirPath = `${path.sep}tmp${path.sep}${getBackupName()}`;
+    const bucketDirPath = `${backupDirPath}${path.sep}${bucketName}`;
     
     // Download each file into backup directory
     for (const file of files) {
 	// Skip directory names
 	if (!file.name.endsWith('/')) {
-	    const destFilePath = `${backupDirPath}${path.sep}${file.name}`;
+	    const destFilePath = `${bucketDirPath}${path.sep}${file.name}`;
 
 	    // This directory has at least one file, so create it
 	    const destDir = path.dirname(destFilePath);
@@ -45,6 +47,19 @@ async function backupS3Bucket(bucketName) {
 	    console.log(`Downloaded ${destFilePath}`);
 	}
     }
+
+    // Create a tarball archive of backup directory
+    const tarFilePath = `${backupDirPath}.tar`;
+    tar.c({
+	gzip: true,
+	file: tarFilePath
+    }, [backupDirPath])
+	.then(result => console.log('Successfully created backup', tarFilePath))
+        .catch(error => {
+	    console.error('ERROR: Failed to create backup');
+	    console.error(error);
+	    process.exit(1);
+	});
 }
 
 /*
@@ -96,7 +111,7 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
  * @param {string} Full path to directory
  */
 function createDirectory(dirPath) {
-        fs.mkdirSync(dirPath, { recursive: true }, (error) => {
+    fs.mkdirSync(dirPath, { recursive: true }, (error) => {
 	if (error) {
 	    console.error('ERROR: Failed to create directory', dirPath);
 	    console.error(error);
@@ -131,6 +146,7 @@ function getBackupName() {
 function leftPadByTwo(dateElement) {
     return dateElement.toString().padStart(2, '0');
 }
+
 
 
 backupS3Bucket(bucketName);
