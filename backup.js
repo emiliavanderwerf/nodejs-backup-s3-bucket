@@ -3,7 +3,8 @@
  * Google Cloud S3 bucket.
  */
 
-// Imports the Google Cloud client library
+// Imports
+const fs = require('fs');
 const {Storage} = require('@google-cloud/storage');
 
 // Creates a client
@@ -11,17 +12,18 @@ const storage = new Storage();
 
 const bucketName = 'nimactive';
 
-const bucket = storage.bucket(bucketName);
 
 /*
- * Top-level function which creates a tarball backup of S3 bucket.
+ * Top-level function which creates a tarball backup of a S3 bucket.
  *
  * @param {Bucket} Google Cloud bucket
  */
-async function backupS3Bucket(bucket) {
+async function backupS3Bucket(bucketName) {
+    const bucket = storage.bucket(bucketName);
     const files = await getFilesInBucket(bucket);
-    console.log('One file name', files[0].name);
-    console.log('Backup file name', getBackupName());
+    
+    prepareBackupDir(bucketName);
+
 }
 
 /*
@@ -40,6 +42,22 @@ async function getFilesInBucket(bucket) {
 	    console.error(error);
 	    process.exit(1);
 	});
+}
+
+function prepareBackupDir(bucketName) {
+    const backupDirName = getBackupName();
+    const fullPath = `/tmp/${backupDirName}/${bucketName}`;
+
+    // Synchronously create backup directory
+    fs.mkdirSync(fullPath, { recursive: true }, (error) => {
+	if (error) {
+	    console.error('ERROR: Failed to create directory', fullPath);
+	    console.error(error);
+	    process.exit(1);
+	}
+    });
+
+    
 }
 
 /*
@@ -69,5 +87,5 @@ function leftPadByTwo(dateElement) {
     return dateElement.toString().padStart(2, '0');
 }
 
-backupS3Bucket(bucket);
+backupS3Bucket(bucketName);
 
