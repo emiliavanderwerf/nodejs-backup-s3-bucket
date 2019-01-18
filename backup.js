@@ -28,19 +28,22 @@ async function backupS3Bucket(bucketName) {
     if (files.length == 0) {
 	// TODO: Should exit?
     }
-    
+
+    // TODO: This call is now redundant
     const backupDirPath = createBackupDir(bucketName);
 
     // Download each file into backup directory
     for (const file of files) {
 	// Skip directory names
 	if (!file.name.endsWith('/')) {
-	    const destDir = `${backupDirPath}${path.sep}`
-	    // TODO: Create destination directory
+	    const destFilePath = `${backupDirPath}${path.sep}${file.name}`;
+
+	    // This directory has at least one file, so create it
+	    const destDir = path.dirname(destFilePath);
+	    createDirectory(destDir);
 	    
-	    const destFilePath = `${destDir}${file.name}`;
 	    const fileContents = await downloadFileFromBucket(bucket, file.name, destFilePath);
-	    console.log(`Downloaded ${file.name} to ${destFilePath}`);
+	    console.log(`Downloaded ${destFilePath}`);
 	}
     }
 }
@@ -99,15 +102,24 @@ function createBackupDir(bucketName) {
     const fullPath = `/tmp/${backupDirName}/${bucketName}`;
 
     // Synchronously create backup directory
-    fs.mkdirSync(fullPath, { recursive: true }, (error) => {
+    createDirectory(fullPath);
+    
+    return fullPath;
+}
+
+/*
+ * Create a directory recursively and synchronously
+ *
+ * @param {string} Full path to directory
+ */
+function createDirectory(dirPath) {
+        fs.mkdirSync(dirPath, { recursive: true }, (error) => {
 	if (error) {
-	    console.error('ERROR: Failed to create directory', fullPath);
+	    console.error('ERROR: Failed to create directory', dirPath);
 	    console.error(error);
 	    process.exit(1);
 	}
     });
-
-    return fullPath;
 }
 
 /*
