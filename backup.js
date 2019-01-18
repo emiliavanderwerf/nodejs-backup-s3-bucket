@@ -9,62 +9,15 @@ const {Storage} = require('@google-cloud/storage');
 // Creates a client
 const storage = new Storage();
 
-
-async function listFilesInBucket(bucketName) {
-
-  // Lists files in the bucket
-  await storage.bucket(bucketName).getFiles(function(err, files) {
-    if (!err) {
-      console.log('Files:');
-      files.forEach(file => {
-        console.log(file.name);
-      });
-    } else {
-      console.log('Error', err);
-    }
-  });
-
-}
-
-
 const bucketName = 'nimactive';
 
-listFilesInBucket(bucketName).then(result => {
-  // ...
-}).catch(error => {
-  // if you have an error
-})
+const bucket = storage.bucket(bucketName);
 
+async function backupS3Bucket(bucket) {
+    bucket
+	.getFiles()
+	.then(result => console.log('Results:', result[0]))
+	.catch(error => console.log('ERROR:', error));
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*const bucketName = 'nimactive';
-const srcFilename = 'https://console.cloud.google.com/storage/browser/nimactive/animals/CatAnd3Dogs.jpeg';
-const destFilename = 'C:/Temp/CatAnd3Dogs.jpeg';
-
-// Downloads the file
-await storage
-  .bucket(bucketName)
-  .file(srcFilename)
-  .download(options);
-
-const options = {
-  destination: destFilename,
-};
-
-console.log(
-  `gs://${bucketName}/${srcFilename} downloaded to ${destFilename}.`
-);
-
-*/
+backupS3Bucket(bucket);
