@@ -30,7 +30,10 @@ async function backupS3Bucket(bucketName) {
 	// TODO: Should exit?
     }
 
-    const backupDirPath = `${path.sep}tmp${path.sep}${getBackupName()}`;
+    // Prepare local directory paths
+    const tempDir = `${path.sep}tmp`;
+    const backupName = getBackupName();
+    const backupDirPath = `${tempDir}${path.sep}${backupName}`;
     const bucketDirPath = `${backupDirPath}${path.sep}${bucketName}`;
     
     // Download each file into backup directory
@@ -48,18 +51,22 @@ async function backupS3Bucket(bucketName) {
 	}
     }
 
-    // Create a tarball archive of backup directory
-    const tarFilePath = `${backupDirPath}.tar`;
+    // Create a tarball archive of backup directory in current directory
+    const tarFilePath = `.${path.sep}${backupName}.tar`;
     tar.c({
 	gzip: true,
-	file: tarFilePath
+	file: tarFilePath,
+	directory: tempDir
     }, [backupDirPath])
-	.then(result => console.log('Successfully created backup', tarFilePath))
+	.then(result => console.log('Created backup in this directory:', tarFilePath))
         .catch(error => {
 	    console.error('ERROR: Failed to create backup');
 	    console.error(error);
 	    process.exit(1);
 	});
+
+    // Delete backup directory, leaving behind only the tarball
+    
 }
 
 /*
