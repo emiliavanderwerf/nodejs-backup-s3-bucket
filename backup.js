@@ -48,8 +48,15 @@ async function backupS3Bucket(bucketName) {
 	    const destDir = path.dirname(destFilePath);
 	    createDirectory(destDir);
 	    
-	    const fileContents = await downloadFileFromBucket(bucket, file.name, destFilePath);
-	    console.log(`Downloaded ${destFilePath}`);
+	    const isSuccess = await downloadFileFromBucket(bucket, file.name, destFilePath);
+	    if (isSuccess) {
+                console.log(`Downloaded ${destFilePath}`);
+	    } else {
+		// Delete this dir if it contains no files
+		if (fs.readdirSync(destDir).length == 0) {
+		    deleteDirectory(destDir);
+		}
+	    }
 	}
     }
 
@@ -106,10 +113,11 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
     return await bucket
 	.file(srcFileName)
 	.download(options)
-	.then(fileContents => fileContents)
+	.then(fileContents => true)
 	.catch(error => {
 	    console.warn(`WARNING: Failed to download ${srcFileName} to ${destFilePath}. Continuing.`);
 	    console.warn(error);
+	    return false;
 	});
 }
 
