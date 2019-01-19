@@ -23,9 +23,10 @@ async function backupS3Bucket(bucketName) {
     // List files in bucket
     const bucket = storage.bucket(bucketName);
     const files = await getFilesInBucket(bucket);
-
+    
     if (files.length == 0) {
-	// TODO: Should exit?
+	console.log('No files found in bucket. Nothing to archive. Exiting.');
+	process.exit();
     }
 
     // Prepare local directory paths
@@ -33,6 +34,8 @@ async function backupS3Bucket(bucketName) {
     const backupName = getBackupName();
     const backupDirPath = `${tempDir}${path.sep}${backupName}`;
     const bucketDirPath = `${backupDirPath}${path.sep}${bucketName}`;
+
+
     
     // Download each file into backup directory
     for (const file of files) {
@@ -87,7 +90,7 @@ async function getFilesInBucket(bucket) {
 }
 
 /*
- * Download an individual file's contents.
+ * Download an individual file's contents from a bucket to the local machine.
  *
  * @param {Bucket} Google cloud bucket
  * @param {string} Name of file in bucket
@@ -115,13 +118,25 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
  * @param {string} Full path to directory
  */
 function createDirectory(dirPath) {
-    fs.mkdirSync(dirPath, { recursive: true }, (error) => {
-	if (error) {
-	    console.error('ERROR: Failed to create directory', dirPath);
-	    console.error(error);
-	    process.exit(1);
-	}
-    });
+    // Only create if doesn't exist
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true }, (error) => {
+            if (error) {
+	        console.error('ERROR: Failed to create directory', dirPath);
+	        console.error(error);
+	        process.exit(1);
+	    }
+        });
+    }
+}
+
+/*
+ * Delete a directory recursively and synchronously
+ *
+ * @param {string} Full path to directory
+ */
+function deleteDirectory(dirPath) {
+
 }
 
 /*
