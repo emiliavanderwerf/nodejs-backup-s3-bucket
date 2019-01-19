@@ -53,7 +53,8 @@ async function backupS3Bucket(bucketName) {
 	}
     }
 
-    // Create a tarball archive of backup directory in current directory
+    // Create a tarball archive of backup directory in current directory. If one
+    // already exists, overwrite it.
     const tarFilePath = `.${path.sep}${backupName}.tar`;
     await tar.c({
 	gzip: true,
@@ -121,6 +122,11 @@ function createDirectory(dirPath) {
     // Only create if doesn't exist
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
+
+        if (!fs.existsSync(dirPath)) {
+            console.error('ERROR: Failed to create directory', dirPath);
+            process.exit(1);
+        }
     }
 }
 
@@ -145,6 +151,11 @@ function deleteDirectory(dirPath) {
 
 	// Finished deleting all files; delete directory
 	fs.rmdirSync(dirPath);
+
+	if (fs.existsSync(dirPath)) {
+	    console.error('ERROR: Failed to remove directory', dirPath);
+	    process.exit(1);
+	}
     }
 }
 
@@ -155,6 +166,7 @@ function deleteDirectory(dirPath) {
  * @returns {string} Backup file name
  */
 function getBackupName() {
+    // Use GMT time for consistency across time zones
     const currentTime = new Date();
     const year = currentTime.getFullYear();
     const month = leftPadByTwo(currentTime.getMonth() + 1);
