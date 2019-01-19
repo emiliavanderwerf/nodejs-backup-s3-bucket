@@ -60,6 +60,13 @@ async function backupS3Bucket(bucketName) {
 	}
     }
 
+    // If all files are private, there is nothing to archive
+    if (fs.readdirSync(backupDirPath).length == 0) {
+	deleteDirectory(backupDirPath);
+	console.log('No files were downloaded. Nothing to archive. Exiting.');
+	process.exit();
+    }
+    
     // Create a tarball archive of backup directory in current directory. If one
     // already exists, overwrite it.
     const tarFilePath = `.${path.sep}${backupName}.tar`;
@@ -109,7 +116,7 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
     const options = {
 	destination: destFilePath
     }
-    
+
     return await bucket
 	.file(srcFileName)
 	.download(options)
