@@ -119,14 +119,11 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
  * @param {string} Full path to directory
  */
 function createDirectory(dirPath) {
-    // Only create if doesn't exist
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
+    fs.mkdirSync(dirPath, { recursive: true });
 
-        if (!fs.existsSync(dirPath)) {
-            console.error('ERROR: Failed to create directory', dirPath);
-            process.exit(1);
-        }
+    if (!fs.existsSync(dirPath)) {
+        console.error('ERROR: Failed to create directory', dirPath);
+        process.exit(1);
     }
 }
 
