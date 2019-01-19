@@ -52,6 +52,9 @@ async function backupS3Bucket(bucketName) {
 	    if (isSuccess) {
                 console.log(`Downloaded ${destFilePath}`);
 	    } else {
+		// Delete this file
+		fs.unlinkSync(destFilePath);
+
 		// Delete this dir if it contains no files
 		if (fs.readdirSync(destDir).length == 0) {
 		    deleteDirectory(destDir);
