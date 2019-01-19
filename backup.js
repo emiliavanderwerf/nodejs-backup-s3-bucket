@@ -56,8 +56,8 @@ async function backupS3Bucket(bucketName) {
     tar.c({
 	gzip: true,
 	file: tarFilePath,
-	directory: tempDir
-    }, [backupDirPath])
+	C: tempDir
+    }, [backupName])
 	.then(result => console.log('Created backup in this directory:', tarFilePath))
         .catch(error => {
 	    console.error('ERROR: Failed to create backup');
