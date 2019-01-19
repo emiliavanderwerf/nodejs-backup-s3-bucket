@@ -35,7 +35,8 @@ async function backupS3Bucket(bucketName) {
     const backupDirPath = `${tempDir}${path.sep}${backupName}`;
     const bucketDirPath = `${backupDirPath}${path.sep}${bucketName}`;
 
-
+    // If backup directory with this name exists, delete it
+    deleteDirectory(backupDirPath);
     
     // Download each file into backup directory
     for (const file of files) {
@@ -54,7 +55,7 @@ async function backupS3Bucket(bucketName) {
 
     // Create a tarball archive of backup directory in current directory
     const tarFilePath = `.${path.sep}${backupName}.tar`;
-    tar.c({
+    await tar.c({
 	gzip: true,
 	file: tarFilePath,
 	C: tempDir
@@ -67,7 +68,7 @@ async function backupS3Bucket(bucketName) {
 	});
 
     // Delete backup directory, leaving behind only the tarball
-    
+    deleteDirectory(backupDirPath);    
 }
 
 /*
@@ -136,7 +137,22 @@ function createDirectory(dirPath) {
  * @param {string} Full path to directory
  */
 function deleteDirectory(dirPath) {
+    // Only delete if exists
+    if (fs.existsSync(dirPath)) {
+	fs.readdirSync(dirPath).forEach(function(file) {
+	    const currentPath = `${dirPath}${path.sep}${file}`;
+	    if (fs.lstatSync(currentPath).isFile()) {
+		// Delete the file
+		fs.unlinkSync(currentPath);
+	    } else {
+		// Recurse to delete nested files
+		deleteDirectory(currentPath);
+	    }
+	});
 
+	// Finished deleting all files; delete directory
+	fs.rmdirSync(dirPath);
+    }
 }
 
 /*
