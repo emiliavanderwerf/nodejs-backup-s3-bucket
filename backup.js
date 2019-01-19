@@ -68,7 +68,7 @@ async function backupS3Bucket(bucketName) {
 }
 
 /*
- * List all accessible files in bucket. Will not list private files.
+ * List all accessible files in bucket, hiding any inaccessible files.
  *
  * @param {Bucket} Google Cloud bucket
  * @returns {Array of File} List of files in bucket, on success
@@ -104,9 +104,8 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
 	.download(options)
 	.then(fileContents => fileContents)
 	.catch(error => {
-	    console.error(`ERROR: Failed to download ${srcFileName} to ${destFilePath}`);
-	    console.error(error);
-	    process.exit(1);
+	    console.warn(`WARNING: Failed to download ${srcFileName} to ${destFilePath}. Continuing.`);
+	    console.warn(error);
 	});
 }
 
@@ -166,7 +165,5 @@ if (args.length != 3) {
 }
 
 const bucketName = args[2];
-console.log('BucketName', bucketName);
-
 backupS3Bucket(bucketName);
 
