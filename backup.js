@@ -12,8 +12,6 @@ const {Storage} = require('@google-cloud/storage');
 // Creates a client
 const storage = new Storage();
 
-const bucketName = 'nimactive';
-
 
 /*
  * Top-level function which creates a tarball backup of data accessible
@@ -82,7 +80,7 @@ async function getFilesInBucket(bucket) {
         // TODO: Will fileResponse[0] throw exception if empty bucket?
         .then(fileResponse => fileResponse[0])
 	.catch(error => {
-	    console.error('ERROR: Failed to list files in bucket');
+	    console.error('ERROR: Failed to find bucket or list files in bucket');
 	    console.error(error);
 	    process.exit(1);
 	});
@@ -155,6 +153,20 @@ function leftPadByTwo(dateElement) {
 }
 
 
+/*
+ * ENTRY
+ */
+
+// Read command-line arguments
+const args = process.argv;
+if (args.length != 3) {
+    console.error('ERROR: Incorrect number of arguments');
+    console.error('Usage: node backup.js <bucketName>');
+    process.exit(1);
+}
+
+const bucketName = args[2];
+console.log('BucketName', bucketName);
 
 backupS3Bucket(bucketName);
 
