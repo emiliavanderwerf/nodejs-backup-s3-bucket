@@ -78,10 +78,9 @@ async function backupS3Bucket(bucketName) {
  * @returns {Array of File} List of files in bucket, on success
  */
 async function getFilesInBucket(bucket) {
-    return bucket
+    return await bucket
 	.getFiles()
         // GetFilesResponse object's parameter 0 is array of File
-        // TODO: Will fileResponse[0] throw exception if empty bucket?
         .then(fileResponse => fileResponse[0])
 	.catch(error => {
 	    console.error('ERROR: Failed to find bucket or list files in bucket');
@@ -103,7 +102,7 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
 	destination: destFilePath
     }
     
-    return bucket
+    return await bucket
 	.file(srcFileName)
 	.download(options)
 	.then(fileContents => fileContents)
@@ -121,13 +120,7 @@ async function downloadFileFromBucket(bucket, srcFileName, destFilePath) {
 function createDirectory(dirPath) {
     // Only create if doesn't exist
     if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true }, (error) => {
-            if (error) {
-	        console.error('ERROR: Failed to create directory', dirPath);
-	        console.error(error);
-	        process.exit(1);
-	    }
-        });
+        fs.mkdirSync(dirPath, { recursive: true });
     }
 }
 
