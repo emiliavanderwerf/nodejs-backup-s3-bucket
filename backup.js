@@ -9,9 +9,6 @@ const path = require('path');
 const tar = require('tar');
 const {Storage} = require('@google-cloud/storage');
 
-// Creates a client
-const storage = new Storage();
-
 
 /*
  * Top-level function which creates a tarball backup of data accessible
@@ -20,6 +17,9 @@ const storage = new Storage();
  * @param {string} Google Cloud bucket name
  */
 async function backupS3Bucket(bucketName) {
+    // Create a client
+    const storage = new Storage();
+
     // List files in bucket
     const bucket = storage.bucket(bucketName);
     const files = await getFilesInBucket(bucket);
